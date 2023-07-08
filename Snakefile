@@ -24,13 +24,23 @@ rule master :
         expand(data + 'New_lists/sample_{i}.csv', i = range(n)),
 
         # sasc
-        #expand(data + 'New_lists/sasc/sample_{i}.out', i = range(n)),
+        #expand(data + 'New_lists/sasc/sample_{i}.txt', i = range(n)),
 
         # phiscs
-        expand(data + 'New_lists/phiscs/sample_{i}.csv', i = range(n))
+        #expand(data + 'New_lists/phiscs/sample_{i}.csv', i = range(n))
 
 # run sasc on the data
 #----------------------------------------------------------------------
+
+# translate sasc output to a standard mutational tree format
+rule from_sasc :
+    input :
+        '{path}/sample_{i}_mlt.gv'
+
+    output : '{path}/sample_{i}.txt'
+    log : '{path}/sample_{i}.txt.log'
+
+    shell : 'python3 scripts/from_sasc.py {input} > {output} 2> {log}'
 
 # run sasc on an input
 rule run_sasc :
@@ -40,7 +50,7 @@ rule run_sasc :
         snvs = '{path}/snvs_{i}.txt',
         cells = '{path}/cells_{i}.txt'
 
-    output : '{path}/sample_{i}.out'
+    output : '{path}/sample_{i}_mlt.gv'
 
     log :
         log = '{path}/sample_{i}.out.log',
@@ -58,7 +68,8 @@ rule run_sasc :
   {time} -vo {log.time} \
     {sasc} -n {n} -m {m} -a {FNrate} -b {FPrate} -k 1 -lxp {threads} \
       -i {input.mat} -e {input.snvs} -E {input.cells} \
-        > {output} 2> {log.log} ''')
+        > {output} 2> {log.log}
+  touch {output} ''')
 
 # convert sample to sasc format
 rule to_sasc :
