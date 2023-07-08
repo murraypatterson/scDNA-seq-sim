@@ -4,10 +4,11 @@ n = 50
 m = 2
 
 time = '/usr/bin/time'
+timeout = '/usr/bin/timeout'
+
 scite = 'SCITE/scite'
 sasc = 'sasc/sasc'
 phiscs = 'PhISCS/PhISCS-I'
-threads = 16
 
 nCells = 100
 FNrate = 0.1
@@ -107,7 +108,7 @@ rule run_sasc :
         log = '{path}/sample_{i}.out.log',
         time = '{path}/sample_{i}.out.time',
 
-    threads : threads
+    threads : 16
 
     run :
         with open(input.mat) as mat :
@@ -158,13 +159,14 @@ rule run_phiscs :
         log = '{path}/sample_{i}.csv.log',
         time = '{path}/sample_{i}.csv.time'
 
-    threads : threads
+    threads : 16
 
     shell : '''
 
-  {time} -vo {log.time} \
-    python3 {input.prog} -SCFile {input.sc} -fn {FNrate} -fp {FPrate} -kmax 1 \
-      -bulkFile {input.bulk} -threads {threads} --drawTree > {log.log} 2>&1
+  {time} -vo {log.time} {timeout} 24h \
+    python3 {input.prog} -SCFile {input.sc} -fn {FNrate} -fp {FPrate} \
+      -o {wildcards.path} -kmax 1 -bulkFile {input.bulk} \
+        -threads {threads} --drawTree > {log.log} 2>&1
   touch {output} '''
 
 # covert sample to PhISCS format
