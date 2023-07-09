@@ -4,6 +4,7 @@ n = 50
 m = 2
 
 time = '/usr/bin/time'
+scite = 'SCITE/scite'
 sasc = 'sasc/sasc'
 phiscs = 'PhISCS/PhISCS-I'
 threads = 16
@@ -23,11 +24,34 @@ rule master :
         # generate the data
         expand(data + 'New_lists/sample_{i}.csv', i = range(n)),
 
+        # scite
+        #expand(data + 'New_lists/scite/sample_{1}.mat', i = range(n)),
+
         # sasc
         #expand(data + 'New_lists/sasc/sample_{i}.txt', i = range(n)),
 
         # phiscs
         #expand(data + 'New_lists/phiscs/sample_{i}.csv', i = range(n))
+
+# run scite on the data
+#----------------------------------------------------------------------
+
+# convert sample to scite format
+rule to_scite :
+    input : '{path}/sample_{i}.csv'
+    output :
+        mat = '{path}/scite/sample_{i}.mat',
+        snvs = '{path}/scite/snvs_{i}.txt'
+
+    log : '{path}/scite/sample_{i}.mat.log'
+
+    shell : '''
+
+  head -1 {input} | awk -F, '{{for(i=2;i<=NF;i++){{print $i}}}}' \
+    > {output.snvs} 2> {log}
+  tail -n +2 {input} | cut -d, -f2- | csvtool transpose \
+    | sed 's/,/ /g' | sed 's/[2-9][0-9]*/1/g' | sed 's/?/3/g' \
+      > {output.mat} 2> {log} '''
 
 # run sasc on the data
 #----------------------------------------------------------------------
@@ -179,7 +203,24 @@ rule sanity_check :
 
     shell : 'python3 scripts/sanity_check.py {input} > {output} 2>&1'
 
-# installing sasc
+# setup scite
+#----------------------------------------------------------------------
+rule build_scite :
+    input : 'SCITE/README.md'
+    output : scite
+    shell : '''
+
+  cd scite && g++ -std=c++11 *.cpp -o scite
+  cd .. && touch {output} '''
+
+rule get_scite :
+    output : 'SCITE/README.md'
+    shell : '''
+
+  git clone https://github.com/cbg-ethz/SCITE.git
+  touch {output} '''
+
+# setup sasc
 #----------------------------------------------------------------------
 
 # build sasc
@@ -199,7 +240,7 @@ rule get_sasc :
   git clone https://github.com/sciccolella/sasc.git
   touch {output} '''
 
-# installing phiscs
+# setup phiscs
 #----------------------------------------------------------------------
 
 # obtain phiscs
