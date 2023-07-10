@@ -79,3 +79,12 @@ for i in range(n) :
         sj = str(j)
 
         assert not q[si] & q[sj], q[si] & q[sj]
+
+# output only new mutations (from "new" bins) acquired in each clone
+r = get_profiles(open(sys.argv[2],'r'), int(sys.argv[3])) # restricted
+for i in range(n) :
+    i = str(i)
+    c = set(x for xss in r[i] for xs in xss for x in xs) # collapse
+
+    new = c & q[i]
+    print(*new)

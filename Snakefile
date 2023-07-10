@@ -20,8 +20,8 @@ dRate = 0.2
 
 rule master :
     input :
-        # sanity check
-        expand(data + 'sanity_checks/sanity_check_{t}.log', t = ts),
+        # compute clones + do some sanity checks
+        expand(data + 'clones/clones_{t}.txt', t = ts),
 
         # generate the data
         expand(data + 'New_lists/sample_{t}.csv', t = ts),
@@ -219,18 +219,18 @@ rule generate_profile :
   python3 scripts/generate_profile.py {input} {m} \
     > {output} 2> {log} '''
 
-# sanity check
-#----------------------------------------------------------------------
-
-# check if children come from parents and that new mutations are unique
-rule sanity_check :
+# compute the new mutations acquired in each clone (w/ sanity checks)
+rule compute_clones :
     input :
         tree = '{path}/New_trees/tree_{t}.csv',
         liste = '{path}/New_lists/list_{t}.csv'
 
-    output : '{path}/sanity_checks/sanity_check_{t}.log'
+    output : '{path}/clones/clones_{t}.txt'
+    log : '{path}/clones/clones_{t}.txt.log'
 
-    shell : 'python3 scripts/sanity_check.py {input} > {output} 2>&1'
+    shell : '''
+
+  python3 scripts/compute_clones.py {input} {m} > {output} 2> {log} '''
 
 # setup scite
 #----------------------------------------------------------------------
