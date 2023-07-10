@@ -29,6 +29,24 @@ rule master :
         # run the tools
         expand(data + 'New_lists/{tool}/sample_{t}.txt', tool = tools, t = ts),
 
+        # compute accuracies
+        expand(data + 'accuracies/acc_{tool}_{t}.txt', tool = 'phiscs', t = ts)
+
+#----------------------------------------------------------------------
+
+rule get_accuracies :
+    input :
+        tree = '{path}/New_trees/tree_{t}.csv',
+        clones = '{path}/clones/clones_{t}.txt',
+        inferred = '{path}/New_lists/{tool}/sample_{t}.txt'
+
+    output : '{path}/accuracies/acc_{tool}_{t}.txt'
+    log : '{path}/accuracies/acc_{tool}_{t}.txt.log'
+
+    shell : '''
+
+  python3 scripts/accuracies.py {input} > {output} 2> {log} '''
+
 # run scite on the data
 #----------------------------------------------------------------------
 
