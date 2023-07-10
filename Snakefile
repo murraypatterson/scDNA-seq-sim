@@ -25,7 +25,7 @@ rule master :
         expand(data + 'New_lists/sample_{i}.csv', i = range(n)),
 
         # scite
-        #expand(data + 'New_lists/scite/sample_{1}.mat', i = range(n)),
+        expand(data + 'New_lists/scite/sample_{i}_ml0.gv', i = range(n)),
 
         # sasc
         #expand(data + 'New_lists/sasc/sample_{i}.txt', i = range(n)),
@@ -36,20 +36,47 @@ rule master :
 # run scite on the data
 #----------------------------------------------------------------------
 
+# run scite on an input
+rule run_scite :
+    input :
+        prog = scite,
+        mat = '{path}/sample_{i}.in',
+        snvs = '{path}/snvs_{i}.txt'
+
+    output : '{path}/sample_{i}_ml0.gv'
+
+    log :
+        log = '{path}/sample_{i}_ml0.gv.log',
+        time = '{path}/sample_{i}_ml0.gv.time'
+
+    run :
+        with open(input.mat) as mat :
+            m = len(mat.readline().split())
+            n = sum(1 for line in mat) + 1
+
+        shell('''
+
+  {time} -vo {log.time} \
+    {scite} -i {input.mat} -n {n} -m {m} -r 1 -l 900000 \
+      -fd {FPrate} -ad {FNrate} -names {input.snvs} -max_treelist_size 1 \
+        > {log.log} 2>&1
+  touch {output} ''')
+
 # convert sample to scite format
 rule to_scite :
     input : '{path}/sample_{i}.csv'
+
     output :
-        mat = '{path}/scite/sample_{i}.mat',
+        mat = '{path}/scite/sample_{i}.in',
         snvs = '{path}/scite/snvs_{i}.txt'
 
-    log : '{path}/scite/sample_{i}.mat.log'
+    log : '{path}/scite/sample_{i}.in.log'
 
     shell : '''
 
   head -1 {input} | awk -F, '{{for(i=2;i<=NF;i++){{print $i}}}}' \
     > {output.snvs} 2> {log}
-  tail -n +2 {input} | cut -d, -f2- | csvtool transpose \
+  tail -n +2 {input} | cut -d, -f2- | csvtool transpose - \
     | sed 's/,/ /g' | sed 's/[2-9][0-9]*/1/g' | sed 's/?/3/g' \
       > {output.mat} 2> {log} '''
 
@@ -210,7 +237,7 @@ rule build_scite :
     output : scite
     shell : '''
 
-  cd scite && g++ -std=c++11 *.cpp -o scite
+  cd SCITE && g++ -std=c++11 *.cpp -o scite
   cd .. && touch {output} '''
 
 rule get_scite :
