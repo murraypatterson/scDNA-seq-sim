@@ -1,11 +1,12 @@
 
 data = '/data/'
-n = 50
+ts = range(50)
 m = 2
 
 time = '/usr/bin/time'
 timeout = '/usr/bin/timeout'
 
+tools = ['scite', 'sasc', 'phiscs']
 scite = 'SCITE/scite'
 sasc = 'sasc/sasc'
 phiscs = 'PhISCS/PhISCS-I'
@@ -20,28 +21,22 @@ dRate = 0.2
 rule master :
     input :
         # sanity check
-        expand(data + 'sanity_checks/sanity_check_{i}.log', i = range(n)),
+        expand(data + 'sanity_checks/sanity_check_{t}.log', t = ts),
 
         # generate the data
-        expand(data + 'New_lists/sample_{i}.csv', i = range(n)),
+        expand(data + 'New_lists/sample_{t}.csv', t = ts),
 
-        # scite
-        expand(data + 'New_lists/scite/sample_{i}.txt', i = range(n)),
-
-        # sasc
-        #expand(data + 'New_lists/sasc/sample_{i}.txt', i = range(n)),
-
-        # phiscs
-        #expand(data + 'New_lists/phiscs/sample_{i}.csv', i = range(n))
+        # run the tools
+        expand(data + 'New_lists/{tool}/sample_{t}.txt', tool = tools, t = ts),
 
 # run scite on the data
 #----------------------------------------------------------------------
 
 # translate scite output to a standard mutational tree format
 rule from_scite :
-    input : '{path}/sample_{i}_ml0.gv'
-    output : '{path}/sample_{i}.txt'
-    log : '{path}/sample_{i}.txt.log'
+    input : '{path}/sample_{t}_ml0.gv'
+    output : '{path}/sample_{t}.txt'
+    log : '{path}/sample_{t}.txt.log'
 
     shell : 'python3 scripts/from_scite.py {input} > {output} 2> {log}'
 
@@ -49,14 +44,14 @@ rule from_scite :
 rule run_scite :
     input :
         prog = scite,
-        mat = '{path}/sample_{i}.in',
-        snvs = '{path}/snvs_{i}.txt'
+        mat = '{path}/sample_{t}.in',
+        snvs = '{path}/snvs_{t}.txt'
 
-    output : '{path}/sample_{i}_ml0.gv'
+    output : '{path}/sample_{t}_ml0.gv'
 
     log :
-        log = '{path}/sample_{i}_ml0.gv.log',
-        time = '{path}/sample_{i}_ml0.gv.time'
+        log = '{path}/sample_{t}_ml0.gv.log',
+        time = '{path}/sample_{t}_ml0.gv.time'
 
     run :
         with open(input.mat) as mat :
@@ -73,13 +68,13 @@ rule run_scite :
 
 # convert sample to scite format
 rule to_scite :
-    input : '{path}/sample_{i}.csv'
+    input : '{path}/sample_{t}.csv'
 
     output :
-        mat = '{path}/scite/sample_{i}.in',
-        snvs = '{path}/scite/snvs_{i}.txt'
+        mat = '{path}/scite/sample_{t}.in',
+        snvs = '{path}/scite/snvs_{t}.txt'
 
-    log : '{path}/scite/sample_{i}.in.log'
+    log : '{path}/scite/sample_{t}.in.log'
 
     shell : '''
 
@@ -94,9 +89,9 @@ rule to_scite :
 
 # translate sasc output to a standard mutational tree format
 rule from_sasc :
-    input : '{path}/sample_{i}_mlt.gv'
-    output : '{path}/sample_{i}.txt'
-    log : '{path}/sample_{i}.txt.log'
+    input : '{path}/sample_{t}_mlt.gv'
+    output : '{path}/sample_{t}.txt'
+    log : '{path}/sample_{t}.txt.log'
 
     shell : 'python3 scripts/from_sasc.py {input} > {output} 2> {log}'
 
@@ -104,15 +99,15 @@ rule from_sasc :
 rule run_sasc :
     input :
         prog = sasc,
-        mat = '{path}/sample_{i}.mat',
-        snvs = '{path}/snvs_{i}.txt',
-        cells = '{path}/cells_{i}.txt'
+        mat = '{path}/sample_{t}.mat',
+        snvs = '{path}/snvs_{t}.txt',
+        cells = '{path}/cells_{t}.txt'
 
-    output : '{path}/sample_{i}_mlt.gv'
+    output : '{path}/sample_{t}_mlt.gv'
 
     log :
-        log = '{path}/sample_{i}_mlt.log',
-        time = '{path}/sample_{i}_mlt.time',
+        log = '{path}/sample_{t}_mlt.log',
+        time = '{path}/sample_{t}_mlt.time',
 
     threads : 16
 
@@ -130,13 +125,13 @@ rule run_sasc :
 
 # convert sample to sasc format
 rule to_sasc :
-    input : '{path}/sample_{i}.csv'
+    input : '{path}/sample_{t}.csv'
     output :
-        mat = '{path}/sasc/sample_{i}.mat',
-        snvs = '{path}/sasc/snvs_{i}.txt',
-        cells = '{path}/sasc/cells_{i}.txt'
+        mat = '{path}/sasc/sample_{t}.mat',
+        snvs = '{path}/sasc/snvs_{t}.txt',
+        cells = '{path}/sasc/cells_{t}.txt'
 
-    log : '{path}/sasc/sample_{i}.mat.log'
+    log : '{path}/sasc/sample_{t}.mat.log'
 
     shell : '''
 
@@ -155,14 +150,14 @@ rule to_sasc :
 rule run_phiscs :
     input :
         prog = phiscs,
-        sc = '{path}/sample_{i}.SC',
-        bulk = '{path}/sample_{i}.bulk'
+        sc = '{path}/sample_{t}.SC',
+        bulk = '{path}/sample_{t}.bulk'
 
-    output : '{path}/sample_{i}.csv'
+    output : '{path}/sample_{t}.txt'
 
     log :
-        log = '{path}/sample_{i}.csv.log',
-        time = '{path}/sample_{i}.csv.time'
+        log = '{path}/sample_{t}.csv.log',
+        time = '{path}/sample_{t}.csv.time'
 
     threads : 16
 
@@ -176,12 +171,12 @@ rule run_phiscs :
 
 # covert sample to PhISCS format
 rule to_phiscs :
-    input : '{path}/sample_{i}.csv'
+    input : '{path}/sample_{t}.csv'
     output :
-        sc = '{path}/phiscs/sample_{i}.SC',
-        bulk = '{path}/phiscs/sample_{i}.bulk'
+        sc = '{path}/phiscs/sample_{t}.SC',
+        bulk = '{path}/phiscs/sample_{t}.bulk'
 
-    log : '{path}/phiscs/sample_{i}.SC.log'
+    log : '{path}/phiscs/sample_{t}.SC.log'
 
     shell : '''
 
@@ -198,15 +193,15 @@ rule to_phiscs :
 
 # amplify and add noise to a profile to generate a simulated SCS sample
 rule amplify_profile :
-    input : '{path}/profile_{i}.csv'
-    output : '{path}/sample_{i}.csv'
+    input : '{path}/profile_{t}.csv'
+    output : '{path}/sample_{t}.csv'
     params :
         cells = nCells,
         a = FNrate,
         b = FPrate,
         u = dRate
 
-    log : '{path}/sample_{i}.csv.log'
+    log : '{path}/sample_{t}.csv.log'
 
     shell : '''
 
@@ -215,9 +210,9 @@ rule amplify_profile :
 
 # generate the mutational profile for each clone from a list
 rule generate_profile :
-    input : '{path}/list_{i}.csv'
-    output : '{path}/profile_{i}.csv'
-    log : '{path}/profile_{i}.csv.log'
+    input : '{path}/list_{t}.csv'
+    output : '{path}/profile_{t}.csv'
+    log : '{path}/profile_{t}.csv.log'
 
     shell : '''
 
@@ -230,10 +225,10 @@ rule generate_profile :
 # check if children come from parents and that new mutations are unique
 rule sanity_check :
     input :
-        tree = '{path}/New_trees/tree_{i}.csv',
-        liste = '{path}/New_lists/list_{i}.csv'
+        tree = '{path}/New_trees/tree_{t}.csv',
+        liste = '{path}/New_lists/list_{t}.csv'
 
-    output : '{path}/sanity_checks/sanity_check_{i}.log'
+    output : '{path}/sanity_checks/sanity_check_{t}.log'
 
     shell : 'python3 scripts/sanity_check.py {input} > {output} 2>&1'
 
