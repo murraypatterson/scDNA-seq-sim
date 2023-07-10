@@ -26,7 +26,7 @@ rule master :
         expand(data + 'New_lists/sample_{i}.csv', i = range(n)),
 
         # scite
-        expand(data + 'New_lists/scite/sample_{i}_ml0.gv', i = range(n)),
+        expand(data + 'New_lists/scite/sample_{i}.txt', i = range(n)),
 
         # sasc
         #expand(data + 'New_lists/sasc/sample_{i}.txt', i = range(n)),
@@ -36,6 +36,14 @@ rule master :
 
 # run scite on the data
 #----------------------------------------------------------------------
+
+# translate scite output to a standard mutational tree format
+rule from_scite :
+    input : '{path}/sample_{i}_ml0.gv'
+    output : '{path}/sample_{i}.txt'
+    log : '{path}/sample_{i}.txt.log'
+
+    shell : 'python3 scripts/from_scite.py {input} > {output} 2> {log}'
 
 # run scite on an input
 rule run_scite :
@@ -86,9 +94,7 @@ rule to_scite :
 
 # translate sasc output to a standard mutational tree format
 rule from_sasc :
-    input :
-        '{path}/sample_{i}_mlt.gv'
-
+    input : '{path}/sample_{i}_mlt.gv'
     output : '{path}/sample_{i}.txt'
     log : '{path}/sample_{i}.txt.log'
 
