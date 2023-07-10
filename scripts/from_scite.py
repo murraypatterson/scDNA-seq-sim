@@ -1,5 +1,4 @@
 import sys
-from collections import defaultdict
 
 lines = open(sys.argv[1],'r')
 
@@ -9,7 +8,7 @@ assert line == 'digraph G {'
 line = lines.readline().strip()
 assert line == 'node [color=deeppink4, style=filled, fontcolor=white];'
 
-children = defaultdict(list) # mapping from parent -> child
+children = {} # mapping from parent -> child
 label = {} # "" node -> label
 for line in lines :
     line = line.strip()
@@ -20,17 +19,21 @@ for line in lines :
     assert line[-1] == ';'
     line = line[:-1]
 
-    assert '->' in line # parent x -> child y
-    print(line,file=sys.stderr)
+    assert '->' in line, line # parent x -> child y
     x, _, y = line.split()
 
     if x == 'Root' :
-        continue
+        x = -1
 
     x = int(x)
     y = int(y)
 
-    children[x].append(y)
+    if not x in children :
+        children[x] = set()
+    if not y in children :
+        children[y] = set()
+
+    children[x].add(y)
 
 assert line == '}'
 

@@ -29,24 +29,23 @@ for line in lines :
 
         children[x].append(y)
 
-    elif 'label=' in line : # node -> label        
+    else :
+        assert 'label=' in line, line # node -> label        
+
         x, *_, y = line.split()
         x = int(x.strip('"'))
         y = y.split('=')[1].strip(']').strip('"')
 
         if x == 0 :
             assert y == 'germline'
-            y = 0
+            y = -100000
 
         y = int(y)
 
         if 'color=indianred1' in line : # it's a loss node
-            x = -x
+            y = -y
 
         label[x] = y
-
-    else :
-        assert 'shape=box' in line, line
 
 assert line == '}'
 
