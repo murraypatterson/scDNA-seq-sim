@@ -27,21 +27,24 @@ rule master :
         expand(data + 'New_lists/sample_{t}.csv', t = ts),
 
         # run the tools
-        expand(data + 'New_lists/{tool}/sample_{t}.txt', tool = tools, t = ts),
+        expand(data + 'New_lists/{tool}/sample_{t}.txt',
+               tool = tools, t = ts),
 
         # compute accuracies
-        expand(data + 'accuracies/acc_{tool}_{t}.txt', tool = 'phiscs', t = ts)
+        expand(data + 'accuracies/ada_dla_{tool}_{t}.txt',
+               tool = tools, t = ts)
 
 #----------------------------------------------------------------------
 
+# compute anc-dec and diff-lin accuracies for tree t from tool
 rule get_accuracies :
     input :
         tree = '{path}/New_trees/tree_{t}.csv',
         clones = '{path}/clones/clones_{t}.txt',
         inferred = '{path}/New_lists/{tool}/sample_{t}.txt'
 
-    output : '{path}/accuracies/acc_{tool}_{t}.txt'
-    log : '{path}/accuracies/acc_{tool}_{t}.txt.log'
+    output : '{path}/accuracies/ada_dla_{tool}_{t}.txt'
+    log : '{path}/accuracies/ada_dla_{tool}_{t}.txt.log'
 
     shell : '''
 

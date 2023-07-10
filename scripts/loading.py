@@ -83,7 +83,6 @@ def get_inferred(h) :
     build_tree(root, t, children)
 
     nodes = set(int(node.name) for node in t.traverse('postorder'))
-    assert len(set(cs) - nodes) == 0, set(cs) - nodes
-    diff = nodes - set(cs)
+    assert not set(cs) - nodes, set(cs) - nodes
 
-    return t, cs, diff
+    return t, cs
