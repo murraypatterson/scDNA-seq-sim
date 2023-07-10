@@ -105,8 +105,8 @@ rule run_sasc :
     output : '{path}/sample_{i}_mlt.gv'
 
     log :
-        log = '{path}/sample_{i}.out.log',
-        time = '{path}/sample_{i}.out.time',
+        log = '{path}/sample_{i}_mlt.log',
+        time = '{path}/sample_{i}_mlt.time',
 
     threads : 16
 
@@ -119,8 +119,7 @@ rule run_sasc :
 
   {time} -vo {log.time} \
     {sasc} -n {n} -m {m} -a {FNrate} -b {FPrate} -k 1 -lxp {threads} \
-      -i {input.mat} -e {input.snvs} -E {input.cells} \
-        > {output} 2> {log.log}
+      -i {input.mat} -e {input.snvs} -E {input.cells} > {log.log} 2>&1
   touch {output} ''')
 
 # convert sample to sasc format
