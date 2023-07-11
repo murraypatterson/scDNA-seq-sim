@@ -32,9 +32,34 @@ rule master :
 
         # compute accuracies
         expand(data + 'accuracies/ada_dla_{tool}_{t}.txt',
-               tool = tools, t = ts)
+               tool = tools, t = ts),
+
+        # compute stats on accuracies
+        expand(data + 'accuracies/ada_dla.stats.csv')
 
 #----------------------------------------------------------------------
+
+# gather accuracies for each tool and compute some stats
+rule compute_stats :
+    input :
+        expand('{{path}}/ada_dla_{tool}.txt', tool = tools)
+
+    output : '{path}/ada_dla.stats.csv'
+    log : '{path}/ada_dla.stats.csv.log'
+
+    shell : '''
+
+  python3 scripts/compute_stats.py {input} > {output} 2> {log} '''
+
+# gather accuracies for a given tool
+rule gather_accuracies :
+    input :
+        expand('{{path}}/ada_dla_{{tool}}_{t}.txt', t = ts)
+
+    output : '{path}/ada_dla_{tool}.txt'
+    log : '{path}/ada_dla_{tool}.txt.log'
+
+    shell : 'cat {input} > {output} 2> {log}'
 
 # compute anc-dec and diff-lin accuracies for tree t from tool
 rule get_accuracies :
