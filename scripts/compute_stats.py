@@ -31,8 +31,8 @@ def box_plot(dic, tools, title, filename) :
 # Main
 #----------------------------------------------------------------------
 
-basename, _ = sys.argv[1].rsplit('/',1)
-tools = [x.rsplit('_',1)[1].strip('.txt') for x in sys.argv[1:]]
+tools = [x.rsplit('_',1)[1].strip('.txt') for x in sys.argv[1:4]]
+out, boxa, boxd = sys.argv[4:]
 
 a, d = defaultdict(list), defaultdict(list) # anc-dec and diff-lin accuracies
 for i, tool in enumerate(tools) :
@@ -43,7 +43,8 @@ for i, tool in enumerate(tools) :
         d[tool].append(float(y))
 
 # mean +/- sd for each of anc-dec and diff-lin over all tools
-print(r'tool\acc,anc-dec (mean +/- sd),diff-lin (mean +/- sd)')
+h = open(out,'w')
+print(r'tool\acc,anc-dec (mean +/- sd),diff-lin (mean +/- sd)', file = h)
 for tool in tools :
     at = a[tool]
     dt = d[tool]
@@ -51,8 +52,9 @@ for tool in tools :
     ad = '{} +/- {}'.format(mean(at), sqrt(var(at)))
     dl = '{} +/- {}'.format(mean(dt), sqrt(var(dt)))
 
-    print(tool, ad, dl, sep = ',')
+    print(tool, ad, dl, sep = ',', file = h)
+h.close()
 
 # box plots
-box_plot(a, tools, 'Ancestor-Descendant Accuracy', '{}/anc-dec.png'.format(basename))
-box_plot(d, tools, 'Different Lineages Accuracy', '{}/diff-lin.png'.format(basename))
+box_plot(a, tools, 'Ancestor-Descendant Accuracy', boxa)
+box_plot(d, tools, 'Different Lineages Accuracy', boxd)

@@ -44,12 +44,16 @@ rule compute_stats :
     input :
         expand('{{path}}/ada_dla_{tool}.txt', tool = tools)
 
-    output : '{path}/ada_dla.stats.csv'
+    output :
+        csv = '{path}/ada_dla.stats.csv',
+        ad = '{path}/anc-dec.png',
+        dl = '{path}/diff-lin.png'
+
     log : '{path}/ada_dla.stats.csv.log'
 
     shell : '''
 
-  python3 scripts/compute_stats.py {input} > {output} 2> {log} '''
+  python3 scripts/compute_stats.py {input} {output} > {log} 2>&1 '''
 
 # gather accuracies for a given tool
 rule gather_accuracies :
