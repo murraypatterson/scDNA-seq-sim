@@ -165,7 +165,7 @@ rule run_sasc :
         shell('''
 
   {time} -vo {log.time} \
-    {sasc} -n {n} -m {m} -a {FNrate} -b {FPrate} -k 1 -lxp {threads} \
+    {sasc} -n {n} -m {m} -a {FNrate} -b {FPrate} -k 1 -d 5 -xp {threads} \
       -i {input.mat} -e {input.snvs} -E {input.cells} > {log.log} 2>&1
   touch {output} ''')
 
