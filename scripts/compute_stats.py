@@ -15,7 +15,7 @@ def var(xs) :
 # compute a box plot dic of tools with title and output to filename
 def box_plot(dic, tools, title, filename) :
 
-    fig = plt.figure(figsize=(10,7))
+    fig = plt.figure(figsize=(5,3.5))
     ax = fig.add_subplot()
 
     data = [dic[tool] for tool in tools]
