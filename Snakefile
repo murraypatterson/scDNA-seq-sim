@@ -1,6 +1,7 @@
 
-data = '/data/'
+data = '/alina-data1/murray/scDNA-seq-sim-trees/'
 ts = range(50)
+#ts = set(ts) - {9,23,29,43,45}
 m = 2
 
 time = '/usr/bin/time'
@@ -21,21 +22,21 @@ dRate = 0.2
 rule master :
     input :
         # compute clones + do some sanity checks
-        expand(data + 'clones/clones_{t}.txt', t = ts),
+        expand(data + 'clones/snvs_{t}.txt', t = ts),
 
         # generate the data
-        expand(data + 'New_lists/sample_{t}.csv', t = ts),
+#        expand(data + 'New_lists/sample_{t}.csv', t = ts),
 
         # run the tools
-        expand(data + 'New_lists/{tool}/sample_{t}.txt',
-               tool = tools, t = ts),
+#        expand(data + 'New_lists/{tool}/sample_{t}.txt',
+#               tool = tools, t = ts),
 
         # compute accuracies
-        expand(data + 'accuracies/ada_dla_{tool}_{t}.txt',
-               tool = tools, t = ts),
+#        expand(data + 'accuracies/ada_dla_{tool}_{t}.txt',
+#               tool = tools, t = ts),
 
         # compute stats on accuracies
-        expand(data + 'accuracies/ada_dla.stats.csv')
+#        expand(data + 'accuracies/ada_dla.stats.csv')
 
 #----------------------------------------------------------------------
 
@@ -69,7 +70,7 @@ rule gather_accuracies :
 rule get_accuracies :
     input :
         tree = '{path}/New_trees/tree_{t}.csv',
-        clones = '{path}/clones/clones_{t}.txt',
+        new = '{path}/clones/new_{t}.txt',
         inferred = '{path}/New_lists/{tool}/sample_{t}.txt'
 
     output : '{path}/accuracies/ada_dla_{tool}_{t}.txt'
@@ -269,18 +270,22 @@ rule generate_profile :
   python3 scripts/generate_profile.py {input} {m} \
     > {output} 2> {log} '''
 
-# compute the new mutations acquired in each clone (w/ sanity checks)
+# compute info on mutations in each clone (w/ sanity checks)
 rule compute_clones :
     input :
         tree = '{path}/New_trees/tree_{t}.csv',
         liste = '{path}/New_lists/list_{t}.csv'
 
-    output : '{path}/clones/clones_{t}.txt'
-    log : '{path}/clones/clones_{t}.txt.log'
+    output :
+        snvs = '{path}/clones/snvs_{t}.txt',
+        new = '{path}/clones/new_{t}.txt',
+        loss = '{path}/clones/loss_{t}.txt'
+
+    log : '{path}/clones/snvs_{t}.txt.log'
 
     shell : '''
 
-  python3 scripts/compute_clones.py {input} {m} > {output} 2> {log} '''
+  python3 scripts/compute_clones.py {input} {m} {output} > {log} 2>&1 '''
 
 # setup scite
 #----------------------------------------------------------------------

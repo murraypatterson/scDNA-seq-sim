@@ -80,11 +80,31 @@ for i in range(n) :
 
         assert not q[si] & q[sj], q[si] & q[sj]
 
-# output only new mutations (from "new" bins) acquired in each clone
+# output info on mutations in each clone
 r = get_profiles(open(sys.argv[2],'r'), int(sys.argv[3])) # restricted
-for i in range(n) :
-    i = str(i)
-    c = set(x for xss in r[i] for xs in xss for x in xs) # collapse
+snvs_h = open(sys.argv[4],'w')
+new_h = open(sys.argv[5],'w')
+loss_h = open(sys.argv[6],'w')
 
-    new = c & q[i]
-    print(*new)
+c = {}
+for u in t.traverse('preorder') :
+    i = u.name
+
+    c[i] = set(x for xss in r[i] for xs in xss for x in xs) # collapse
+    print(i, *c[i], file = snvs_h)
+
+    new = c[i] & q[i]
+    print(i, *new, file = new_h)
+
+    if i == '0' :
+        print(i, file = loss_h)
+        continue
+
+    v = u.up
+    j = v.name
+    loss = c[j] - c[i] # c[j] guaranteed to exist b/c preorder
+    print(i, *loss, file = loss_h)
+
+snvs_h.close()
+new_h.close()
+loss_h.close()
