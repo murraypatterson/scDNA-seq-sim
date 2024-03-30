@@ -1,11 +1,12 @@
 
-data = '/alina-data1/murray/scDNA-seq-sim-trees/'
-ts = range(50)
+data = '/home/murraypatterson/data/scDNA-seq-sim-trees/'
+ts = range(1) #50)
 #ts = set(ts) - {9,23,29,43,45}
 m = 2
 
 time = '/usr/bin/time'
 timeout = '/usr/bin/timeout'
+mp3 = 'mp3treesim'
 
 tools = ['scite', 'sasc', 'phiscs']
 scite = 'SCITE/scite'
@@ -21,8 +22,11 @@ dRate = 0.2
 
 rule master :
     input :
+        # compute gt gv trees
+        expand(data + 'New_trees/tree_{t}.gv', t = ts)
+        
         # compute clones + do some sanity checks
-        expand(data + 'clones/snvs_{t}.txt', t = ts),
+#        expand(data + 'clones/snvs_{t}.txt', t = ts),
 
         # generate the data
 #        expand(data + 'New_lists/sample_{t}.csv', t = ts),
@@ -38,6 +42,31 @@ rule master :
         # compute stats on accuracies
 #        expand(data + 'accuracies/ada_dla.stats.csv')
 
+#----------------------------------------------------------------------
+
+# compute mp3 distance for tree from ...
+rule get_mp3_dist :
+    input :
+        ground = '{path}/New_trees/tree_{t}.gv',
+        sasc = '{path}/New_lists/sasc/sample_{t}.gv'
+
+    output : '{path}/accuracies/mp3_sasc_{t}.txt'
+    log : '{path}/accuracies/mp3_sasc_{t}.txt.log'
+
+    shell : '{mp3} --labeled-only {input} > {output} 2> {log}'
+
+# convert ground truth tree to a mutational tree for comparison
+rule get_mut_tree :
+    input :
+        tree = '{path}/New_trees/tree_{t}.csv',
+        new = '{path}/clones/new_{t}.txt'
+
+    output : '{path}/New_trees/tree_{t}.gv'
+    log : '{path}/New_trees/tree_{t}.gv.log'
+
+    shell : 'python3 scripts/mut_tree.py {input} > {output} 2> {log}'
+
+# for ancestor-descendant and different lineages accuracies
 #----------------------------------------------------------------------
 
 # gather accuracies for each tool and compute some stats
@@ -137,6 +166,14 @@ rule to_scite :
 
 # run sasc on the data
 #----------------------------------------------------------------------
+
+# remove losses from sasc output
+rule from_sasc_to_mp3 :
+    input : '{path}/sample_{t}_mlt.gv'
+    output : '{path}/sample_{t}_sasc.gv'
+    log : '{path}/sample_{t}_sasc.gv.log'
+
+    shell : 'grep -v "indianred" {input} > {output} 2> {log}'
 
 # translate sasc output to a standard mutational tree format
 rule from_sasc :
