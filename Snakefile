@@ -1,6 +1,6 @@
 
-data = '/home/murraypatterson/data/scDNA-seq-sim-trees/'
-ts = range(1) #50)
+data = '/data/scDNA-seq-sim-trees/'
+ts = range(50)
 #ts = set(ts) - {9,23,29,43,45}
 m = 2
 
@@ -22,9 +22,13 @@ dRate = 0.2
 
 rule master :
     input :
+        #...
+        expand(data + 'accuracies/mp3s_{tool}_stats.txt',
+               tool = ['sasc', 'scite'])
+
         # compute gt gv trees
-        expand(data + 'New_trees/tree_{t}.gv', t = ts)
-        
+#        expand(data + 'New_trees/tree_{t}.gv', t = ts)
+
         # compute clones + do some sanity checks
 #        expand(data + 'clones/snvs_{t}.txt', t = ts),
 
@@ -44,14 +48,32 @@ rule master :
 
 #----------------------------------------------------------------------
 
-# compute mp3 distance for tree from ...
+# quick mean +/- SD for tool
+rule quick_stats :
+    input : '{path}/mp3s_{tool}.txt'
+    output : '{path}/mp3s_{tool}_stats.txt'
+    log : '{path}/mp3s_{tool}_stats.txt.log'
+
+    shell : 'python3 scripts/quick_stats.py {input} > {output} 2> {log}'
+
+# gather accuracies mp3 for given tool
+rule gather_accuracies_mp3 :
+    input :
+        expand('{{path}}/mp3_{{tool}}_{t}.txt', t = ts)
+
+    output : '{path}/mp3s_{tool}.txt'
+    log : '{path}/mp3s_{tool}.txt.log'
+
+    shell : 'cat {input} > {output} 2> {log}'
+
+# compute mp3 distance for tree from tool
 rule get_mp3_dist :
     input :
         ground = '{path}/New_trees/tree_{t}.gv',
-        sasc = '{path}/New_lists/sasc/sample_{t}.gv'
+        tool = '{path}/New_lists/{tool}/sample_{t}_{tool}.gv'
 
-    output : '{path}/accuracies/mp3_sasc_{t}.txt'
-    log : '{path}/accuracies/mp3_sasc_{t}.txt.log'
+    output : '{path}/accuracies/mp3_{tool}_{t}.txt'
+    log : '{path}/accuracies/mp3_{tool}_{t}.txt.log'
 
     shell : '{mp3} --labeled-only {input} > {output} 2> {log}'
 
@@ -111,6 +133,14 @@ rule get_accuracies :
 
 # run scite on the data
 #----------------------------------------------------------------------
+
+# for mp3 (naming convention)
+rule from_scite_to_mp3 :
+    input : '{path}/sample_{t}_ml0.gv'
+    output : '{path}/sample_{t}_scite.gv'
+    log : '{path}/sample_{t}_scite.gv.log'
+
+    shell : 'python3 scripts/scite2mp3.py {input} > {output} 2> {log}'
 
 # translate scite output to a standard mutational tree format
 rule from_scite :
